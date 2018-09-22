@@ -1,0 +1,20 @@
+# Eclipse
+.classpath
+.project
+.settings
+
+# Maven
+target
+
+# IntelliJ IDEA
+.idea
+*.iml
+
+# Openshift
+bin
+tmp
+.kube
+**/.openshift/deployments
+
+
+/build/
