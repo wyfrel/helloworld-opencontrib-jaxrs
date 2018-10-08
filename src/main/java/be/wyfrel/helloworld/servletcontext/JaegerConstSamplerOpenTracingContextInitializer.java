@@ -1,7 +1,12 @@
 package be.wyfrel.helloworld.servletcontext;
 
+import be.wyfrel.helloworld.application.TracingInitializer;
+import io.opentracing.contrib.jaxrs2.server.SpanFinishingFilter;
+import java.util.EnumSet;
 import java.util.regex.Pattern;
 
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration.Dynamic;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -43,9 +48,14 @@ public class JaegerConstSamplerOpenTracingContextInitializer implements ServletC
                 .getTracer();
             GlobalTracer.register(jaegerTracer);
         }
-        
-        Pattern pattern = Pattern.compile("/healthCheck/readinessProbe|/healthCheck/livenessProbe");
-        servletContextEvent.getServletContext().setAttribute("io.opentracing.contrib.jaxrs2.server.ServerTracingFilter.skipPattern", pattern);
+
+        Dynamic filterRegistration = servletContextEvent.getServletContext()
+            .addFilter("tracingFilter", new SpanFinishingFilter());
+        filterRegistration.setAsyncSupported(true);
+        filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "*");
+
+        servletContextEvent.getServletContext()
+            .setInitParameter("resteasy.providers", TracingInitializer.class.getName());
     }
     
     /**
